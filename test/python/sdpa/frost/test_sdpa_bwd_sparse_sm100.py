@@ -19,8 +19,8 @@ _INPUT_NAMES = ("q", "k", "v", "out", "dout", "lse", "topk_idxs")
 
 @pytest.fixture(autouse=True)
 def supported_device():
-    if not torch.cuda.is_available() or torch.cuda.get_device_capability() != (10, 0):
-        pytest.skip("QSA backward requires SM100")
+    if not torch.cuda.is_available() or torch.cuda.get_device_capability() not in ((10, 0), (10, 3)):
+        pytest.skip("QSA backward requires SM100 or SM103")
     if cutedsl_too_old(cutedsl_state()[1]):
         pytest.skip("QSA backward requires CuTe DSL >= 4.7.0")
 
@@ -244,7 +244,7 @@ def test_old_dsl_and_other_architecture_rejected():
         with pytest.raises(NotImplementedError, match="4.7"):
             bwd.SparseGqaBwdDslSm100(*(descs[n] for n in _INPUT_NAMES)).check_support()
     with patch.object(torch.cuda, "get_device_capability", return_value=(9, 0)):
-        with pytest.raises(NotImplementedError, match="SM100"):
+        with pytest.raises(NotImplementedError, match="SM100 or SM103"):
             bwd.SparseGqaBwdDslSm100(*(descs[n] for n in _INPUT_NAMES)).check_support()
 
 

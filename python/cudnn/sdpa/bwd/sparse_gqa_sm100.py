@@ -28,7 +28,7 @@ HEAD_DIM = 256
 TOPK_WIDTH = 2051  # 512 blocks x 4 tokens + 3 tail tokens
 SOFTMAX_SCALE = HEAD_DIM**-0.5
 GQA_RATIOS = (12, 16)  # the dense pair kernel tiles its N = 48 score columns as whole queries of G heads
-_SUPPORTED_CAPABILITIES = ((10, 0),)
+_SUPPORTED_CAPABILITIES = ((10, 0), (10, 3))  # Blackwell 10.x: the CuTe DSL kernels JIT-compile for the running device
 _KERNEL_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "kernels", "sm100", "bprop_sparse_d256_f16.py")
 
 
@@ -116,7 +116,7 @@ class SparseGqaBwdDslSm100(APIBase):
         capability = torch.cuda.get_device_capability(q_desc.device)
         self._not_implemented_error_if(
             capability not in _SUPPORTED_CAPABILITIES,
-            f"{self.__class__.__name__} requires SM100, found SM{capability[0]}{capability[1]}",
+            f"{self.__class__.__name__} requires SM100 or SM103, found SM{capability[0]}{capability[1]}",
         )
         self._not_implemented_error_if(
             self.softmax_scale not in (None, SOFTMAX_SCALE),
